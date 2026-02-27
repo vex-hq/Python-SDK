@@ -3,10 +3,8 @@ import asyncio
 import httpx
 import pytest
 import respx
-
 from vex.models import ExecutionEvent
 from vex.transport import AsyncTransport, SyncTransport
-
 
 # ---------------------------------------------------------------------------
 # AsyncTransport fixtures
@@ -55,6 +53,7 @@ async def test_transport_flush_sends_batch(transport):
     assert len(transport._buffer) == 0
     # Verify payload wraps events in {"events": [...]} to match API contract
     import json as _json
+
     request_body = _json.loads(route.calls.last.request.content)
     assert "events" in request_body
     assert isinstance(request_body["events"], list)
@@ -64,9 +63,7 @@ async def test_transport_flush_sends_batch(transport):
 @respx.mock
 @pytest.mark.asyncio
 async def test_transport_flush_empty_buffer_noop(transport):
-    route = respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202)
-    )
+    route = respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202))
     await transport.flush()
     assert not route.called
 
@@ -173,9 +170,7 @@ def test_sync_transport_verify():
 
 @respx.mock
 def test_sync_transport_verify_raises_on_error():
-    respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(500, text="Internal Server Error")
-    )
+    respx.post("https://api.tryvex.dev/v1/verify").mock(return_value=httpx.Response(500, text="Internal Server Error"))
     transport = SyncTransport(
         api_url="https://api.tryvex.dev",
         api_key="ag_test_key",
@@ -222,11 +217,19 @@ def test_sync_transport_sends_api_key_header():
 def test_sync_transport_verify_forwards_correction_metadata():
     """verify() should include correction and transparency in metadata."""
     import json as _json
+
     route = respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-123", "confidence": 0.9, "action": "pass",
-            "output": "corrected", "checks": {}, "corrected": True,
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-123",
+                "confidence": 0.9,
+                "action": "pass",
+                "output": "corrected",
+                "checks": {},
+                "corrected": True,
+            },
+        )
     )
     transport = SyncTransport(
         api_url="https://api.tryvex.dev",
@@ -244,11 +247,17 @@ def test_sync_transport_verify_forwards_correction_metadata():
 @respx.mock
 def test_sync_transport_correction_client_uses_longer_timeout():
     """When correction=cascade, should use correction timeout client (12s)."""
-    route = respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "e", "confidence": 0.9, "action": "pass",
-            "output": "ok", "checks": {},
-        })
+    respx.post("https://api.tryvex.dev/v1/verify").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "e",
+                "confidence": 0.9,
+                "action": "pass",
+                "output": "ok",
+                "checks": {},
+            },
+        )
     )
     transport = SyncTransport(
         api_url="https://api.tryvex.dev",
@@ -268,11 +277,17 @@ def test_sync_transport_correction_client_uses_longer_timeout():
 @respx.mock
 def test_sync_transport_default_client_for_no_correction():
     """When correction=none, should use default client (2s timeout)."""
-    route = respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "e", "confidence": 0.9, "action": "pass",
-            "output": "ok", "checks": {},
-        })
+    respx.post("https://api.tryvex.dev/v1/verify").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "e",
+                "confidence": 0.9,
+                "action": "pass",
+                "output": "ok",
+                "checks": {},
+            },
+        )
     )
     transport = SyncTransport(
         api_url="https://api.tryvex.dev",
@@ -292,10 +307,16 @@ def test_sync_transport_default_client_for_no_correction():
 def test_sync_transport_close_closes_both_clients():
     """close() should close both default and correction clients."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "e", "confidence": 0.9, "action": "pass",
-            "output": "ok", "checks": {},
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "e",
+                "confidence": 0.9,
+                "action": "pass",
+                "output": "ok",
+                "checks": {},
+            },
+        )
     )
     transport = SyncTransport(
         api_url="https://api.tryvex.dev",
@@ -530,9 +551,7 @@ def test_sync_verify_retries_on_network_error():
 @respx.mock
 def test_sync_verify_no_retry_on_http_error():
     """verify() should not retry on HTTP errors (4xx/5xx) and raise immediately."""
-    route = respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(401, text="Unauthorized")
-    )
+    route = respx.post("https://api.tryvex.dev/v1/verify").mock(return_value=httpx.Response(401, text="Unauthorized"))
 
     transport = SyncTransport(
         api_url="https://api.tryvex.dev",

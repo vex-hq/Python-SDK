@@ -1,8 +1,8 @@
 from importlib.metadata import PackageNotFoundError, version
 
 from vex.config import VexConfig
-from vex.exceptions import VexBlockError, ConfigurationError
-from vex.guard import Vex, Session
+from vex.exceptions import ConfigurationError, VexBlockError
+from vex.guard import Session, Vex
 from vex.models import ConversationTurn, VexResult
 
 __all__ = [

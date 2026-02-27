@@ -23,6 +23,4 @@ class VexBlockError(VexError):
 
     def __init__(self, result: "VexResult") -> None:  # noqa: F821
         self.result = result
-        super().__init__(
-            f"Output blocked (confidence={result.confidence})"
-        )
+        super().__init__(f"Output blocked (confidence={result.confidence})")

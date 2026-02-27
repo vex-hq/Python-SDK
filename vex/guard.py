@@ -18,12 +18,13 @@ import logging
 import threading
 import time
 import uuid
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Generator, List, Optional
+from typing import Any, Callable, Optional
 
 from vex.config import VexConfig
-from vex.exceptions import VexBlockError, ConfigurationError
-from vex.models import ConversationTurn, ExecutionEvent, VexResult, StepRecord
+from vex.exceptions import ConfigurationError, VexBlockError
+from vex.models import ConversationTurn, ExecutionEvent, StepRecord, VexResult
 from vex.transport import AsyncTransport, SyncTransport
 
 logger = logging.getLogger(__name__)
@@ -52,15 +53,15 @@ class Session:
         guard: "Vex",
         agent_id: str,
         session_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> None:
         self._guard = guard
         self._agent_id = agent_id
         self.session_id: str = session_id or str(uuid.uuid4())
-        self._metadata: Dict[str, Any] = metadata or {}
+        self._metadata: dict[str, Any] = metadata or {}
         self._sequence: int = 0
         self._lock = threading.Lock()
-        self._history: List[ConversationTurn] = []
+        self._history: list[ConversationTurn] = []
         self._window_size: int = guard.config.conversation_window_size
 
     @property
@@ -84,8 +85,8 @@ class Session:
         with self._lock:
             seq = self._sequence
             # Snapshot history BEFORE this turn (excludes current turn)
-            history_snapshot: Optional[List[ConversationTurn]] = (
-                list(self._history[-self._window_size:]) if self._history else None
+            history_snapshot: Optional[list[ConversationTurn]] = (
+                list(self._history[-self._window_size :]) if self._history else None
             )
         ctx = TraceContext(
             guard=self._guard,
@@ -105,14 +106,16 @@ class Session:
         ctx._finalise()
         with self._lock:
             self._sequence += 1
-            self._history.append(ConversationTurn(
-                sequence_number=seq,
-                input=input_data,
-                output=ctx._output,
-                task=task,
-            ))
+            self._history.append(
+                ConversationTurn(
+                    sequence_number=seq,
+                    input=input_data,
+                    output=ctx._output,
+                    task=task,
+                )
+            )
             if len(self._history) > self._window_size:
-                self._history = self._history[-self._window_size:]
+                self._history = self._history[-self._window_size :]
 
 
 class TraceContext:
@@ -143,7 +146,7 @@ class TraceContext:
         session_id: Optional[str] = None,
         sequence_number: Optional[int] = None,
         parent_execution_id: Optional[str] = None,
-        conversation_history: Optional[List[ConversationTurn]] = None,
+        conversation_history: Optional[list[ConversationTurn]] = None,
     ) -> None:
         self._guard = guard
         self._agent_id = agent_id
@@ -151,10 +154,10 @@ class TraceContext:
         self._input_data = input_data
         self._output: Any = None
         self._ground_truth: Any = None
-        self._schema: Optional[Dict[str, Any]] = None
-        self._steps: List[StepRecord] = []
+        self._schema: Optional[dict[str, Any]] = None
+        self._steps: list[StepRecord] = []
         self._start_time: float = time.monotonic()
-        self._metadata: Dict[str, Any] = {}
+        self._metadata: dict[str, Any] = {}
         self._token_count: Optional[int] = None
         self._cost_estimate: Optional[float] = None
         self._session_id = session_id
@@ -167,7 +170,7 @@ class TraceContext:
         """Set the ground truth reference data for verification."""
         self._ground_truth = data
 
-    def set_schema(self, schema: Dict[str, Any]) -> None:
+    def set_schema(self, schema: dict[str, Any]) -> None:
         """Set the expected output schema for validation."""
         self._schema = schema
 
@@ -530,7 +533,7 @@ class Vex:
         fn: Callable,
         task: Optional[str] = None,
         ground_truth: Any = None,
-        schema: Optional[Dict[str, Any]] = None,
+        schema: Optional[dict[str, Any]] = None,
         input_data: Any = None,
     ) -> VexResult:
         """Execute a callable and wrap the result with Vex processing.
@@ -592,7 +595,7 @@ class Vex:
         self,
         agent_id: str,
         session_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> Session:
         """Create a session for grouping related executions.
 

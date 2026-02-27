@@ -15,7 +15,7 @@ import asyncio
 import logging
 import threading
 import time
-from typing import Dict, List, Optional
+from typing import Optional
 
 import httpx
 
@@ -61,7 +61,7 @@ class AsyncTransport:
         self.timeout_s: float = timeout_s
         self.max_buffer_size: int = max_buffer_size
 
-        self._buffer: List[ExecutionEvent] = []
+        self._buffer: list[ExecutionEvent] = []
         self._lock: threading.Lock = threading.Lock()
         self._client: Optional[httpx.AsyncClient] = None
         self._dropped_count: int = 0
@@ -115,8 +115,7 @@ class AsyncTransport:
                 # No running event loop -- caller will need to flush manually
                 # or the periodic flush timer will pick it up.
                 logger.debug(
-                    "No running event loop; skipping auto-flush "
-                    "(buffer size: %d)",
+                    "No running event loop; skipping auto-flush (buffer size: %d)",
                     len(self._buffer),
                 )
 
@@ -170,7 +169,7 @@ class AsyncTransport:
                     return  # Don't put events back in buffer
                 # Server errors (5xx) are transient - retry with backoff
                 if attempt < max_retries - 1:
-                    delay = base_delay * (2 ** attempt)
+                    delay = base_delay * (2**attempt)
                     logger.warning(
                         "Server error %d on flush (attempt %d/%d); retrying in %.2fs",
                         e.response.status_code,
@@ -189,7 +188,7 @@ class AsyncTransport:
             except Exception as e:
                 # Network errors and other exceptions - retry with backoff
                 if attempt < max_retries - 1:
-                    delay = base_delay * (2 ** attempt)
+                    delay = base_delay * (2**attempt)
                     logger.warning(
                         "Network error on flush (attempt %d/%d); retrying in %.2fs: %s",
                         attempt + 1,
@@ -293,7 +292,7 @@ class SyncTransport:
         thresholds: Optional[ThresholdConfig] = None,
         correction: str = "none",
         transparency: str = "opaque",
-    ) -> Dict[str, object]:
+    ) -> dict[str, object]:
         """POST the event to ``/v1/verify`` and return the parsed JSON response.
 
         Includes threshold configuration in the request metadata so the
@@ -351,7 +350,7 @@ class SyncTransport:
             try:
                 response = client.post(url, json=payload)
                 response.raise_for_status()
-                result: Dict[str, object] = response.json()
+                result: dict[str, object] = response.json()
                 return result
             except httpx.HTTPStatusError:
                 # HTTP errors (4xx/5xx) should be raised immediately
@@ -361,7 +360,7 @@ class SyncTransport:
                 # Network errors - retry with backoff
                 last_exception = e
                 if attempt < max_retries - 1:
-                    delay = base_delay * (2 ** attempt)
+                    delay = base_delay * (2**attempt)
                     logger.warning(
                         "Network error on verify (attempt %d/%d); retrying in %.2fs: %s",
                         attempt + 1,

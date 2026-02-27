@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -13,7 +13,7 @@ class ThresholdConfig(BaseModel):
     block_threshold: float = 0.3
 
     @model_validator(mode="after")
-    def validate_threshold_order(self) -> "ThresholdConfig":
+    def validate_threshold_order(self) -> ThresholdConfig:
         if not (self.block_threshold < self.flag_threshold < self.pass_threshold):
             raise ValueError(
                 "Thresholds must satisfy: block < flag < pass. "
@@ -33,7 +33,7 @@ class ConversationTurn(BaseModel):
     sequence_number: int
     input: Any = None
     output: Any = None
-    task: Optional[str] = None
+    task: str | None = None
 
 
 class StepRecord(BaseModel):
@@ -41,36 +41,36 @@ class StepRecord(BaseModel):
     name: str
     input: Any = None
     output: Any = None
-    duration_ms: Optional[float] = None
+    duration_ms: float | None = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ExecutionEvent(BaseModel):
     execution_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    session_id: Optional[str] = None
-    parent_execution_id: Optional[str] = None
-    sequence_number: Optional[int] = None
+    session_id: str | None = None
+    parent_execution_id: str | None = None
+    sequence_number: int | None = None
     agent_id: str
-    task: Optional[str] = None
+    task: str | None = None
     input: Any
     output: Any
-    steps: List[StepRecord] = Field(default_factory=list)
-    token_count: Optional[int] = None
-    cost_estimate: Optional[float] = None
-    latency_ms: Optional[float] = None
+    steps: list[StepRecord] = Field(default_factory=list)
+    token_count: int | None = None
+    cost_estimate: float | None = None
+    latency_ms: float | None = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     ground_truth: Any = None
-    schema_definition: Optional[Dict[str, Any]] = None
-    conversation_history: Optional[List[ConversationTurn]] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    schema_definition: dict[str, Any] | None = None
+    conversation_history: list[ConversationTurn] | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class VexResult(BaseModel):
     output: Any
-    confidence: Optional[float] = None
+    confidence: float | None = None
     action: str = "pass"  # "pass" | "flag" | "block"
-    corrections: Optional[List[Dict[str, Any]]] = None
+    corrections: list[dict[str, Any]] | None = None
     execution_id: str
-    verification: Optional[Dict[str, Any]] = None
+    verification: dict[str, Any] | None = None
     corrected: bool = False
-    original_output: Optional[Any] = None
+    original_output: Any | None = None

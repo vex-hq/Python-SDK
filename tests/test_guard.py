@@ -1,13 +1,11 @@
 """Tests for the Vex client: watch decorator, trace context manager, run wrapper."""
 
 import time
-from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 import respx
-
-from vex import Vex, VexBlockError, ConfigurationError, ConversationTurn, VexConfig, VexResult
+from vex import ConfigurationError, Vex, VexBlockError, VexConfig
 from vex.models import ThresholdConfig
 
 
@@ -65,9 +63,7 @@ def test_default_config_does_not_log_event_ids():
 
 @respx.mock
 def test_guard_watch_decorator_async_mode():
-    route = respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -90,9 +86,7 @@ def test_guard_watch_decorator_async_mode():
 
 @respx.mock
 def test_guard_watch_captures_latency():
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -114,9 +108,7 @@ def test_guard_watch_captures_latency():
 
 @respx.mock
 def test_guard_watch_handles_agent_exception():
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202)
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -137,9 +129,7 @@ def test_guard_watch_handles_agent_exception():
 
 @respx.mock
 def test_guard_run_explicit():
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -161,9 +151,7 @@ def test_guard_run_explicit():
 
 @respx.mock
 def test_guard_trace_context_manager():
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -188,14 +176,17 @@ def test_guard_trace_context_manager():
 @respx.mock
 def test_guard_sync_mode():
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-123",
-            "confidence": 0.92,
-            "action": "pass",
-            "output": "verified answer",
-            "corrections": None,
-            "checks": {},
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-123",
+                "confidence": 0.92,
+                "action": "pass",
+                "output": "verified answer",
+                "corrections": None,
+                "checks": {},
+            },
+        )
     )
 
     guard = Vex(
@@ -219,9 +210,7 @@ def test_guard_sync_mode():
 @respx.mock
 def test_guard_trace_with_steps():
     """TraceContext.step() should record intermediate steps in the event."""
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -244,9 +233,7 @@ def test_guard_trace_with_steps():
 @respx.mock
 def test_guard_run_with_ground_truth_and_schema():
     """run() should forward ground_truth and schema to the event."""
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -271,9 +258,7 @@ def test_guard_run_with_ground_truth_and_schema():
 @respx.mock
 def test_guard_sync_mode_verify_failure_falls_through():
     """When sync verify fails (HTTP error), should log warning and return pass-through."""
-    respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(500, json={"error": "internal"})
-    )
+    respx.post("https://api.tryvex.dev/v1/verify").mock(return_value=httpx.Response(500, json={"error": "internal"}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -297,9 +282,7 @@ def test_guard_sync_mode_verify_failure_falls_through():
 @respx.mock
 def test_guard_trace_set_token_count_and_cost():
     """TraceContext.set_token_count() and set_cost_estimate() should flow through to the event."""
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -322,9 +305,7 @@ def test_guard_trace_set_token_count_and_cost():
 @respx.mock
 def test_guard_trace_set_metadata():
     """TraceContext.set_metadata() should add key-value pairs to event metadata."""
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -414,14 +395,17 @@ def test_guard_close_is_idempotent():
 def test_guard_sync_mode_block_raises():
     """When sync verify returns action=block, should raise VexBlockError."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-block",
-            "confidence": 0.2,
-            "action": "block",
-            "output": "blocked output",
-            "corrections": None,
-            "checks": {},
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-block",
+                "confidence": 0.2,
+                "action": "block",
+                "output": "blocked output",
+                "corrections": None,
+                "checks": {},
+            },
+        )
     )
 
     guard = Vex(
@@ -448,14 +432,17 @@ def test_guard_sync_mode_block_raises():
 def test_guard_sync_mode_flag_returns_normally():
     """When sync verify returns action=flag, should log warning and return normally."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-flag",
-            "confidence": 0.6,
-            "action": "flag",
-            "output": "flagged output",
-            "corrections": None,
-            "checks": {},
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-flag",
+                "confidence": 0.6,
+                "action": "flag",
+                "output": "flagged output",
+                "corrections": None,
+                "checks": {},
+            },
+        )
     )
 
     guard = Vex(
@@ -480,14 +467,17 @@ def test_guard_sync_mode_flag_returns_normally():
 def test_guard_sync_mode_pass_returns_normally():
     """When sync verify returns action=pass, should return normally."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-pass",
-            "confidence": 0.95,
-            "action": "pass",
-            "output": "good output",
-            "corrections": None,
-            "checks": {},
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-pass",
+                "confidence": 0.95,
+                "action": "pass",
+                "output": "good output",
+                "corrections": None,
+                "checks": {},
+            },
+        )
     )
 
     guard = Vex(
@@ -512,14 +502,17 @@ def test_guard_sync_mode_pass_returns_normally():
 def test_guard_sync_mode_threshold_config_sent():
     """Verify that threshold config is included in verify request payload."""
     route = respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-thresh",
-            "confidence": 0.9,
-            "action": "pass",
-            "output": "answer",
-            "corrections": None,
-            "checks": {},
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-thresh",
+                "confidence": 0.9,
+                "action": "pass",
+                "output": "answer",
+                "corrections": None,
+                "checks": {},
+            },
+        )
     )
 
     guard = Vex(
@@ -544,6 +537,7 @@ def test_guard_sync_mode_threshold_config_sent():
     # Check that the request payload includes thresholds in metadata
     request = route.calls[0].request
     import json
+
     body = json.loads(request.content)
     assert "metadata" in body
     assert "thresholds" in body["metadata"]
@@ -555,9 +549,7 @@ def test_guard_sync_mode_threshold_config_sent():
 @respx.mock
 def test_guard_async_mode_never_raises_block():
     """Async mode should never raise VexBlockError — events are fire-and-forget."""
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -581,14 +573,17 @@ def test_guard_async_mode_never_raises_block():
 def test_guard_sync_trace_block_raises():
     """trace() in sync mode should also raise on block."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-trace-block",
-            "confidence": 0.1,
-            "action": "block",
-            "output": "blocked",
-            "corrections": None,
-            "checks": {},
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-trace-block",
+                "confidence": 0.1,
+                "action": "block",
+                "output": "blocked",
+                "corrections": None,
+                "checks": {},
+            },
+        )
     )
 
     guard = Vex(
@@ -706,18 +701,21 @@ def test_session_turn_data_correctness(guard):
 def test_guard_sync_correction_returns_corrected_output():
     """When server returns corrected=True, VexResult should reflect corrected output."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-corrected",
-            "confidence": 0.9,
-            "action": "pass",
-            "output": "corrected answer",
-            "checks": {},
-            "corrected": True,
-            "original_output": "bad answer",
-            "correction_attempts": [
-                {"layer": 1, "layer_name": "repair", "success": True, "latency_ms": 300},
-            ],
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-corrected",
+                "confidence": 0.9,
+                "action": "pass",
+                "output": "corrected answer",
+                "checks": {},
+                "corrected": True,
+                "original_output": "bad answer",
+                "correction_attempts": [
+                    {"layer": 1, "layer_name": "repair", "success": True, "latency_ms": 300},
+                ],
+            },
+        )
     )
 
     guard = Vex(
@@ -744,16 +742,19 @@ def test_guard_sync_correction_returns_corrected_output():
 def test_guard_sync_correction_opaque_hides_details():
     """Opaque mode: original_output and corrections should be None."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-opaque",
-            "confidence": 0.9,
-            "action": "pass",
-            "output": "corrected",
-            "checks": {},
-            "corrected": True,
-            "original_output": None,
-            "correction_attempts": None,
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-opaque",
+                "confidence": 0.9,
+                "action": "pass",
+                "output": "corrected",
+                "checks": {},
+                "corrected": True,
+                "original_output": None,
+                "correction_attempts": None,
+            },
+        )
     )
 
     guard = Vex(
@@ -781,18 +782,21 @@ def test_guard_sync_correction_opaque_hides_details():
 def test_guard_sync_correction_transparent_shows_details():
     """Transparent mode: original_output and corrections should be populated."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-transparent",
-            "confidence": 0.9,
-            "action": "pass",
-            "output": "corrected",
-            "checks": {},
-            "corrected": True,
-            "original_output": "bad output",
-            "correction_attempts": [
-                {"layer": 1, "layer_name": "repair", "success": True},
-            ],
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-transparent",
+                "confidence": 0.9,
+                "action": "pass",
+                "output": "corrected",
+                "checks": {},
+                "corrected": True,
+                "original_output": "bad output",
+                "correction_attempts": [
+                    {"layer": 1, "layer_name": "repair", "success": True},
+                ],
+            },
+        )
     )
 
     guard = Vex(
@@ -821,14 +825,17 @@ def test_guard_sync_correction_transparent_shows_details():
 def test_guard_sync_correction_failed_raises_block():
     """When correction fails (all attempts exhausted), should raise VexBlockError."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-block",
-            "confidence": 0.2,
-            "action": "block",
-            "output": "bad output",
-            "checks": {},
-            "corrected": False,
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-block",
+                "confidence": 0.2,
+                "action": "block",
+                "output": "bad output",
+                "checks": {},
+                "corrected": False,
+            },
+        )
     )
 
     guard = Vex(
@@ -852,9 +859,7 @@ def test_guard_sync_correction_failed_raises_block():
 @respx.mock
 def test_guard_async_mode_ignores_correction():
     """Async mode should ignore correction setting -- fire-and-forget."""
-    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(
-        return_value=httpx.Response(202, json={"accepted": 1})
-    )
+    respx.post("https://api.tryvex.dev/v1/ingest/batch").mock(return_value=httpx.Response(202, json={"accepted": 1}))
 
     guard = Vex(
         api_key="ag_test_key",
@@ -879,13 +884,16 @@ def test_guard_async_mode_ignores_correction():
 def test_guard_sync_no_correction_unchanged():
     """correction=none -> existing behavior, no correction fields."""
     respx.post("https://api.tryvex.dev/v1/verify").mock(
-        return_value=httpx.Response(200, json={
-            "execution_id": "exec-none",
-            "confidence": 0.6,
-            "action": "flag",
-            "output": "flagged",
-            "checks": {},
-        })
+        return_value=httpx.Response(
+            200,
+            json={
+                "execution_id": "exec-none",
+                "confidence": 0.6,
+                "action": "flag",
+                "output": "flagged",
+                "checks": {},
+            },
+        )
     )
 
     guard = Vex(

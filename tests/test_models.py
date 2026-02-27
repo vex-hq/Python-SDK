@@ -1,12 +1,9 @@
-import uuid
-from datetime import datetime, timezone
-
 from vex.models import (
     ConversationTurn,
     ExecutionEvent,
-    VexResult,
     StepRecord,
     ThresholdConfig,
+    VexResult,
 )
 
 
@@ -18,9 +15,7 @@ def test_threshold_config_defaults():
 
 
 def test_threshold_config_custom():
-    config = ThresholdConfig(
-        pass_threshold=0.9, flag_threshold=0.6, block_threshold=0.4
-    )
+    config = ThresholdConfig(pass_threshold=0.9, flag_threshold=0.6, block_threshold=0.4)
     assert config.pass_threshold == 0.9
 
 
