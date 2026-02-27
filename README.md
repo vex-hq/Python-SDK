@@ -1,4 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/vex-sdk)](https://pypi.org/project/vex-sdk/)
+[![Python](https://img.shields.io/pypi/pyversions/vex-sdk)](https://pypi.org/project/vex-sdk/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Vex-AI-Dev/Python-SDK)](https://github.com/Vex-AI-Dev/Python-SDK)
 [![Docs](https://img.shields.io/badge/docs-docs.tryvex.dev-brightgreen)](https://docs.tryvex.dev)
