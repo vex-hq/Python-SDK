@@ -75,6 +75,8 @@ class Session:
         task: Optional[str] = None,
         input_data: Any = None,
         parent_execution_id: Optional[str] = None,
+        experiment_id: Optional[str] = None,
+        variant: Optional[str] = None,
     ) -> Generator["TraceContext", None, None]:
         """Create a traced execution within this session.
 
@@ -97,6 +99,8 @@ class Session:
             sequence_number=seq,
             parent_execution_id=parent_execution_id,
             conversation_history=history_snapshot,
+            experiment_id=experiment_id,
+            variant=variant,
         )
         # Merge session-level metadata (trace-level overrides take precedence)
         for key, value in self._metadata.items():
@@ -147,6 +151,8 @@ class TraceContext:
         sequence_number: Optional[int] = None,
         parent_execution_id: Optional[str] = None,
         conversation_history: Optional[list[ConversationTurn]] = None,
+        experiment_id: Optional[str] = None,
+        variant: Optional[str] = None,
     ) -> None:
         self._guard = guard
         self._agent_id = agent_id
@@ -164,6 +170,8 @@ class TraceContext:
         self._sequence_number = sequence_number
         self._parent_execution_id = parent_execution_id
         self._conversation_history = conversation_history
+        self._experiment_id = experiment_id
+        self._variant = variant
         self.result: Optional[VexResult] = None
 
     def set_ground_truth(self, data: Any) -> None:
@@ -243,6 +251,8 @@ class TraceContext:
             schema_definition=self._schema,
             conversation_history=self._conversation_history,
             metadata=self._metadata,
+            experiment_id=self._experiment_id,
+            variant=self._variant,
         )
 
         self.result = self._guard._process_event(event)
@@ -488,6 +498,8 @@ class Vex:
         agent_id: str,
         task: Optional[str] = None,
         input_data: Any = None,
+        experiment_id: Optional[str] = None,
+        variant: Optional[str] = None,
     ) -> Generator[TraceContext, None, None]:
         """Context manager for fine-grained execution tracing.
 
@@ -508,6 +520,10 @@ class Vex:
             Optional human-readable description of the agent's task.
         input_data:
             Optional input data to record in the event.
+        experiment_id:
+            Optional experiment ID for A/B testing.
+        variant:
+            Optional variant key for A/B testing.
 
         Yields
         ------
@@ -519,6 +535,8 @@ class Vex:
             agent_id=agent_id,
             task=task,
             input_data=input_data,
+            experiment_id=experiment_id,
+            variant=variant,
         )
         yield ctx
         ctx._finalise()
@@ -535,6 +553,8 @@ class Vex:
         ground_truth: Any = None,
         schema: Optional[dict[str, Any]] = None,
         input_data: Any = None,
+        experiment_id: Optional[str] = None,
+        variant: Optional[str] = None,
     ) -> VexResult:
         """Execute a callable and wrap the result with Vex processing.
 
@@ -583,6 +603,8 @@ class Vex:
             latency_ms=elapsed_ms,
             ground_truth=ground_truth,
             schema_definition=schema,
+            experiment_id=experiment_id,
+            variant=variant,
         )
 
         return self._process_event(event)
